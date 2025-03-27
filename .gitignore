@@ -1,7 +1,19 @@
-.venv
-.idea
-.gguf
-models/*
-__pycache__
-/.idea
-/.devcontainer
+# Virtual Environment
+.venv/
+
+# IDE-specific files
+.idea/
+.vscode/
+
+# Compiled Python files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Large model files
+models/
+*.gguf
+
+# Dev container configuration
+.devcontainer/

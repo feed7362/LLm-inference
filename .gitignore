@@ -1,0 +1,7 @@
+.venv
+.idea
+.gguf
+models/*
+__pycache__
+/.idea
+/.devcontainer

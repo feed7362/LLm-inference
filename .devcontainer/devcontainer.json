@@ -1,0 +1,15 @@
+{
+  "name": "Llama GPU DevContainer", 
+  "build": { 
+    "dockerfile": "Dockerfile" 
+  },
+  "runArgs": [
+    "--gpus", "all"
+  ],
+ 
+  "customizations" : {
+    "jetbrains" : {   
+      "backend" : "PyCharm"
+    }
+  }
+}

@@ -1,0 +1,24 @@
+version: "3.8"
+
+services:
+  llama_dev:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: llama_dev_container
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    volumes:
+      - .:/app
+    working_dir: /app
+    tty: true
+    stdin_open: true
+    environment:
+      - CUDA_DOCKER_ARCH=all
+      - GGML_CUDA=1
+    command: ["/bin/bash"]

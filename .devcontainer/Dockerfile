@@ -19,6 +19,7 @@ RUN pip install --no-cache-dir --upgrade pip \
 
 RUN CMAKE_ARGS="-DGGML_CUDA=on" pip install llama-cpp-python
 
+EXPOSE 2222
 
 ENTRYPOINT ["/bin/bash"]
-CMD ["python3"]
+CMD ["uvicorn", "main:model_app", "--host", "0.0.0.0", "--port", "2222", "--workers", "4", "--log-level", "debug"]

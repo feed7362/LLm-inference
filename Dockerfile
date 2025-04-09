@@ -1,7 +1,6 @@
 FROM nvidia/cuda:12.8.0-devel-ubuntu22.04
 
 WORKDIR /app
-COPY . .
 
 ENV CUDA_DOCKER_ARCH=all
 ENV GGML_CUDA=1
@@ -19,7 +18,8 @@ RUN pip install --no-cache-dir --upgrade pip \
 
 RUN CMAKE_ARGS="-DGGML_CUDA=on" pip install llama-cpp-python
 
+COPY . .
+
 EXPOSE 2222
 
-ENTRYPOINT ["/bin/bash"]
-CMD ["uvicorn", "main:model_app", "--host", "0.0.0.0", "--port", "2222", "--workers", "4", "--log-level", "debug"]
+CMD ["python3", "-m", "uvicorn", "main:model_app", "--host", "0.0.0.0", "--port", "2222", "--workers", "4", "--log-level", "debug"]

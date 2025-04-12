@@ -1,8 +1,7 @@
 from fastapi import FastAPI, WebSocket
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.websockets import WebSocketDisconnect
-from pkg_resources import yield_lines
-
+import json
 from model import model
 
 model_app = FastAPI()
@@ -23,23 +22,26 @@ model_app.add_middleware(
 
 async def stream_model_response(query: str, websocket: WebSocket):
     try:
-        prompt = f"You are a helpful assistant. Q: {query} ? A:"
+        prompt = f"""<|im_start|>system\nYou are Qwen, created by Alibaba Cloud. You are a helpful assistant.<|im_end|>.
+        <|im_start|>user
+        {query.strip()}<|im_end|>
+        <|im_start|>assistant"""
         response = model(
                     prompt,
                     max_tokens=512,
-                    stop=["<|endoftext|>", "?", "Q:", "A:"],
-                    temperature=0.7,
-                    top_p=0.9,
-                    top_k=50,
+                    stop=["<|im_end|>"],
+                    temperature=0.8,
+                    top_p=0.95,
+                    top_k=40,
                     stream=True)
         for chunk in response:
             print("Chunk debug: ",chunk)
             output_text = chunk["choices"][0]["text"]
             await websocket.send_json(output_text)
-        return None
+        await websocket.send_json({"end_of_stream": True})
     except Exception as e:
         await websocket.send_json(f"error: {str(e)}")
-        return None
+        await websocket.close(code=1006)
 
 
 @model_app.websocket("/stream")
@@ -48,9 +50,8 @@ async def stream_websocket(websocket : WebSocket):
         await websocket.accept()
         while True:
             data = await websocket.receive_json()
-
-            await stream_model_response(data, websocket)
-
+            parsed_data = json.loads(data) if isinstance(data, str) else data
+            await stream_model_response(parsed_data["text"], websocket)
     except WebSocketDisconnect:
         print("WebSocket disconnected.")
     except Exception as e:

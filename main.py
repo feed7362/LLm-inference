@@ -3,8 +3,23 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.websockets import WebSocketDisconnect
 import json
 from model import model
+from tools import load_tools_metadata, calculator, datetime_now
 
-model_app = FastAPI()
+from contextlib import asynccontextmanager
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    dummy_prompt = "<|im_start|>user\nHello<|im_end|>\n<|im_start|>assistant"
+    _ = model(
+        dummy_prompt,
+        max_tokens=1,
+        temperature=0.1,
+        top_p=0.1,
+    )
+    print("Model warmed up.")
+
+    yield
+
+model_app = FastAPI(lifespan=lifespan)
 
 origins = [
     "http://localhost:2222",
@@ -20,12 +35,40 @@ model_app.add_middleware(
     "Authorization"],
 )
 
+def build_function_tool_prompt(tools_block: str) -> str:
+    return f"""
+    You may call one or more functions to assist with the user query.
+    
+    Function signatures are provided below:
+    
+    <tools>
+    {tools_block}
+    </tools>
+    
+    For each function call, return a JSON object within <tool_call></tool_call> XML tags:
+    
+    <tool_call>
+    {{"name": "<function-name>", "arguments": <args-json-object>}}
+    </tool_call>
+    """
+
+
+def build_prompt(user_input: str) -> str:    
+    system_prompt = f"""<|im_start|>system\nYou are Qwen, created by Alibaba Cloud. You are a helpful assistant.
+    Format all mathematical expressions using LaTeX syntax. 
+    - Use `\\( ... \\)` for inline math.
+    - Use `$$ ... $$` for display math blocks.
+    - Do not explain LaTeX, just use it to present math.
+    {build_function_tool_prompt(load_tools_metadata())}
+    <|im_end|>."""
+    user_prompt = f"<|im_start|>user\n{user_input.strip()}<|im_end|>"
+    assistant_prompt = "<|im_start|>assistant"
+    return f"{system_prompt}\n{user_prompt}\n{assistant_prompt}"
+
+
 async def stream_model_response(query: str, websocket: WebSocket):
     try:
-        prompt = f"""<|im_start|>system\nYou are Qwen, created by Alibaba Cloud. You are a helpful assistant.<|im_end|>.
-        <|im_start|>user
-        {query.strip()}<|im_end|>
-        <|im_start|>assistant"""
+        prompt = build_prompt(query)
         response = model(
                     prompt,
                     max_tokens=512,

@@ -13,4 +13,5 @@ __pycache__/
 
 # Large model files
 models/
+data/
 *.gguf

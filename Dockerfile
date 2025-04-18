@@ -14,7 +14,7 @@ RUN apt update \
 RUN pip install --no-cache-dir --upgrade pip \
     && pip install --no-cache-dir \
     pytest cmake scikit-build setuptools fastapi uvicorn[standard] sse-starlette \
-    pydantic-settings starlette-context huggingface-hub
+    pydantic-settings starlette-context huggingface-hub openai
 
 RUN CMAKE_ARGS="-DGGML_CUDA=on" pip install llama-cpp-python
 

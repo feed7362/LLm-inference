@@ -1,25 +1,30 @@
 import math
 from pydantic import BaseModel, Field
 
+ALLOWED_GLOBALS = {"__builtins__": None}
+
+def __get_allowed_locals__():
+    math_locals = {name: getattr(math, name) for name in dir(math) if not name.startswith("__")}
+    safe_functions = {
+        "abs": abs,
+        "round": round,
+        "pow": pow,
+        "max": max,
+        "min": min,
+        "sum": sum,
+    }
+    math_locals.update(safe_functions)
+    return math_locals
+
 class CalculatorRequest(BaseModel):
     expression: str = Field(description="Calculate a mathematical expression with math module support")
 
-def calculator(request: CalculatorRequest):
+def calculator(request: CalculatorRequest) -> str:
     try:
-        allowed_globals = {"__builtins__": None}
-        allowed_locals = {k: getattr(math, k) for k in dir(math) if not k.startswith("__")}
-        allowed_locals.update({
-            "abs": abs,
-            "round": round,
-            "pow": pow,
-            "max": max,
-            "min": min,
-            "sum": sum,
-        })
-
-        result = eval(request.expression, allowed_globals, allowed_locals)
+        allowed_locals = __get_allowed_locals__()
+        result = eval(request.expression, ALLOWED_GLOBALS, allowed_locals)
         return str(result)
-    except (SyntaxError, NameError) as e:
-        return f"Syntax or Name error: {str(e)}"
-    except Exception as e:
-        return f"Error evaluating expression: {str(e)}"
+    except (SyntaxError, NameError) as error:
+        return f"Syntax or Name error: {str(error)}"
+    except Exception as error:
+        return f"Error evaluating expression: {str(error)}"

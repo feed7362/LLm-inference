@@ -8,21 +8,35 @@ from contextlib import asynccontextmanager
 from utils.logger import CustomLogger
 logger = CustomLogger(__name__)
 
+def initialize_engine() -> LLMEngine:
+    engine = LLMEngine()
+    engine.warmup()
+    logger.info("Engine warmup complete")
+    return engine
+
+def cleanup_engine(engine: LLMEngine) -> None:
+    engine.close()
+    logger.info("Engine closed")
+
+def validate_application_metadata() -> None:
+    validate_metadata()
+    logger.info("Metadata validation complete")
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    engine = None
     try:
         logger.info("Lifespan: start")
-        engine = LLMEngine()
-        engine.warmup()
-        logger.info("Lifespan: warmup complete")
-
-        validate_metadata()
-        logger.info("Lifespan metadata validate complete")
+        engine = initialize_engine()
+        validate_application_metadata()
         yield
-        engine.close()
     except Exception as e:
         logger.exception(f"Lifespan error: {str(e)}")
         raise
+    finally:
+        if engine:
+            cleanup_engine(engine)
 
 model_app = FastAPI(lifespan=lifespan)
 
@@ -36,7 +50,12 @@ model_app.add_middleware(
     allow_origins=origins,
     allow_credentials=True,
     allow_methods=["GET", "POST"],
-    allow_headers=["Content-Type", "Set-Cookie", "Access-Control-Allow-Headers", "Access-Control-Allow-Origin",
-    "Authorization"],
+    allow_headers=[
+        "Content-Type",
+        "Set-Cookie",
+        "Access-Control-Allow-Headers",
+        "Access-Control-Allow-Origin",
+        "Authorization",
+    ],
 )
 model_app.include_router(websocket_router)

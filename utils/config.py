@@ -1,7 +1,7 @@
 from pydantic_settings import BaseSettings
 
 class ModelSettings(BaseSettings):
-    model_path: str = "models/nlp/Mahou-1.5-Qwen2.5-1.5B.Q4_K_S.gguf"
+    model_path: str = "models/nlp/qwen2.5-1.5b-instruct-q4_k_m.gguf"
     chat_format: str = "chatml-function-calling"
     n_gpu_layers: int = 30
     n_threads: int = 8

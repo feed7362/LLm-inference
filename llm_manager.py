@@ -37,33 +37,43 @@ class LLMEngine:
             self._initialized = False
             raise RuntimeError(f"Model initialization failed: {e}")
 
-    def infer(self, messages: list, tools: list, stream: bool = False, **kwargs):
-        if not self._initialized or not hasattr(self, 'model'):
-            raise RuntimeError("Model not properly initialized")
+    def _cleanup_model(self):
+        if getattr(self, 'model', None) is not None:
+            try:
+                del self.model
+                logger.info("Model resources have been released.")
+            except Exception as e:
+                logger.error(f"Error cleaning up model resources: {e}")
 
+    def infer(self, messages: list, tools: list, stream: bool = False, **kwargs):
+        if not self._initialized or not getattr(self, 'model', None):
+            raise RuntimeError("Model not properly initialized")
         if not messages:
             raise ValueError("Messages list cannot be empty")
 
         logger.info(f"Running inference with prompt: {messages}")
-        return self.model.create_chat_completion(messages, 
-                                                 tools=tools or [], 
-                                                 tool_choice="auto" if stream == False else [tool["function"]["name"] for tool in tools], 
-                                                 stream=stream,
-                                                 **kwargs)
+
+        if stream:
+            tool_choice = [tool["function"]["name"] for tool in tools]
+        else:
+            tool_choice = "auto"
+
+        return self.model.create_chat_completion(
+            messages,
+            tools=tools or [],
+            tool_choice=tool_choice,
+            stream=stream,
+            **kwargs
+        )
 
     def warmup(self):
         try:
             logger.info("Warming up the model...")
-            prompt = [{"role": "user","content": [{"type" : "text", "text": "Hi"}]}]
+            prompt = [{"role": "user", "content": [{"type": "text", "text": "Hi"}]}]
             self.model.create_chat_completion(messages=prompt, max_tokens=1, temperature=0.0, top_p=0.1)
         except Exception as e:
             logger.error(f"Warmup failed: {e}")
 
     def close(self):
-        """Explicit cleanup method for releasing model resources."""
-        if hasattr(self, 'model'):
-            try:
-                del self.model
-                logger.info("Model resources have been released.")
-            except Exception as e:
-                logger.error(f"Error during explicit cleanup of model resources: {e}")
+        self._cleanup_model()
+

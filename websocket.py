@@ -46,15 +46,15 @@ async def stream_model_response(inputs: list[dict], websocket: WebSocket):
             tools=tools,
             max_tokens=512,
             stop=["<|im_end|>"],
-            temperature=0.8,
-            top_p=0.95,
+            temperature=0.7,
+            top_p=0.90,
             top_k=40
         )
         logger.debug("Response from inference: %s", response)
-        print(response)
-        if "{{tool_placeholder}}"  in response:
+        if "function_call"  in response["choices"][0]["message"]:
             function_outputs = extract_function_outputs(response)
-            response["function_call_outputs"] = function_outputs
+            response["choices"][0]["message"]["function_call_outputs"] = function_outputs
+            
 
         await websocket.send_json({"token": response})
     except Exception as e:

@@ -63,29 +63,9 @@ def load_tools_metadata() -> list:
 
 
 def format_input(user_input: list[dict]) -> list[dict]:
-    """
-    Format the chat conversation input for the assistant.
-    
-    User_input format:
-    {
-        "role": "user",
-        "content": [
-            {"type": "text", "text": "What's in this image?"},
-            {"type": "image_url", "image_url": {"url": "https://upload.wikimedia.org/wikipedia.jpg" } }
-        ]
-    }
-    """
     system_message = (
-        "A chat between a curious user and an artificial intelligence assistant. "
-        "The assistant gives helpful, detailed, and polite answers to the user's questions. "
-        "The assistant calls functions with appropriate input when necessary"
-    )
-    tools_instructions = (
-        "When a function/tool is required, the assistant should never return the result directly. "
-        "Instead, insert a `{{tool_placeholder}}` string where the tool result should appear. "
-        "Only after finishing the response with the placeholder should the tool be invoked. "
-        "Do NOT use tool_call blocks unless the response already contains `{{tool_placeholder}}`. "
-        "If the question can be answered without a tool, do so directly."
+        "You are an AI assistant. You must always respond text using the function `ResponseRequest`. "
+        "Do not answer with plain text. Every response must be returned as a function call with the full answer inside the argument. "
     )
     latex_instructions = (  
         "Format all mathematical expressions using LaTeX syntax. \n"
@@ -96,7 +76,7 @@ def format_input(user_input: list[dict]) -> list[dict]:
     return [
         {
             "role": "system",
-            "content": f"{system_message}\n{tools_instructions}\n{latex_instructions}"
+            "content": f"{system_message}\n{latex_instructions}"
         },
         {
             "role": "user",

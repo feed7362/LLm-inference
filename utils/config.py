@@ -14,7 +14,7 @@ class ModelSettings(BaseSettings):
 class DefaultInputParams(BaseSettings):
     stop: list[str] = ["<|im_end|>"]
     stream: bool = True
-    repeat_penalty: float = 1.0
+    repeat_penalty: float = 1.1
 
     class Config:
         env_prefix = "default_"

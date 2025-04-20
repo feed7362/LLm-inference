@@ -10,6 +10,12 @@ def sanitize_arguments(args: dict) -> dict:
         args[0] = re.sub(r'\\([a-zA-Z]+)', r'\1', args[0])
     return args
 
+def _process_request(request_class, function, args: dict) -> str:
+    validated_request = request_class(**args)
+    logger.debug("Validated request: %s", validated_request)
+    return function(validated_request)
+
+
 def call_function(name: str, args: dict) -> str:
     """Call specific functions based on the provided function name."""
     logger.debug("Calling function: %s with args: %s", name, args)
@@ -17,19 +23,16 @@ def call_function(name: str, args: dict) -> str:
     match name:
         case "CalculatorRequest":
             from agency.calculator import calculator, CalculatorRequest
-            validated_request = CalculatorRequest(**sanitized_args)
-            logger.debug("Validated request: %s", validated_request)
-            return calculator(validated_request)
+            return _process_request(CalculatorRequest, calculator, sanitized_args)
         case "DateTimeRequest":
             from agency.time_managment import datetime_now, DateTimeRequest
-            validated_request = DateTimeRequest(**sanitized_args)
-            logger.debug("Validated request: %s", validated_request)
-            return datetime_now(validated_request)
+            return _process_request(DateTimeRequest, datetime_now, sanitized_args)
         case "CodeExecutionRequest":
             from agency.code_execution import execute_code, CodeExecutionRequest
-            validated_request = CodeExecutionRequest(**sanitized_args)
-            logger.debug("Validated request: %s", validated_request)
-            return execute_code(validated_request)
+            return _process_request(CodeExecutionRequest, execute_code, sanitized_args)
+        case "ResponseRequest":
+            from agency.model_response import return_response, ResponseRequest
+            return _process_request(ResponseRequest, return_response, sanitized_args)
     logger.error("Unknown function name: %s", name)
     raise ValueError(f"Unknown function name: {name}")
 

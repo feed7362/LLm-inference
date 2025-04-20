@@ -5,60 +5,39 @@ from threading import Lock
 from utils.logger import CustomLogger
 logger = CustomLogger(__name__)
 
-class LLMEngine:
-    _instance = None
+class SingletonMeta(type):
+    _instances = {}
     _lock = Lock()
 
-    def __new__(cls):
+    def __call__(cls, *args, **kwargs):
         with cls._lock:
-            if cls._instance is None:
-                logger.info("Creating a new instance of LLMEngine")
-                cls._instance = super(LLMEngine, cls).__new__(cls)
-                cls._instance._load_model()
-        return cls._instance
+            if cls not in cls._instances:
+                instance = super().__call__(*args, **kwargs)
+                cls._instances[cls] = instance
+        return cls._instances[cls]
 
+class LLMEngine(metaclass=SingletonMeta):
     def __init__(self):
-        if not getattr(self, '_initialized', False):
-            self._initialized = True
-
-    def __del__(self):
-        if hasattr(self, 'model'):
-            try:
-                del self.model
-            except Exception as e:
-                logger.error(f"Error cleaning up model resources: {e}")
+        self._model = None
+        self._model_lock = Lock()
+        self._warmup_done = False
 
     def _load_model(self):
-        try:
-            logger.info("Loading LLM model...")
-            self.model = Llama(**ModelSettings().model_dump())
-        except Exception as e:
-            logger.exception(f"Failed to load model: {e}")
-            self._initialized = False
-            raise RuntimeError(f"Model initialization failed: {e}")
-
-    def _cleanup_model(self):
-        if getattr(self, 'model', None) is not None:
-            try:
-                del self.model
-                logger.info("Model resources have been released.")
-            except Exception as e:
-                logger.error(f"Error cleaning up model resources: {e}")
+        with self._model_lock:
+            if self._model is None:
+                logger.info("Loading LLM model...")
+                self._model = Llama(**ModelSettings().model_dump())
+                logger.info("Model loaded successfully.")
 
     def infer(self, messages: list, tools: list, stream: bool = False, **kwargs):
-        if not self._initialized or not getattr(self, 'model', None):
-            raise RuntimeError("Model not properly initialized")
         if not messages:
             raise ValueError("Messages list cannot be empty")
 
         logger.info(f"Running inference with prompt: {messages}")
 
-        if stream:
-            tool_choice = [tool["function"]["name"] for tool in tools]
-        else:
-            tool_choice = "auto"
+        tool_choice = "none" if stream else "auto"
 
-        return self.model.create_chat_completion(
+        return self._model.create_chat_completion(
             messages,
             tools=tools or [],
             tool_choice=tool_choice,
@@ -68,12 +47,29 @@ class LLMEngine:
 
     def warmup(self):
         try:
+            self._load_model()
             logger.info("Warming up the model...")
             prompt = [{"role": "user", "content": [{"type": "text", "text": "Hi"}]}]
-            self.model.create_chat_completion(messages=prompt, max_tokens=1, temperature=0.0, top_p=0.1)
+            self._model.create_chat_completion(messages=prompt, max_tokens=1, temperature=0.0, top_p=0.1)
+            self._warmup_done = True
+            logger.info("Warmup complete.")
         except Exception as e:
             logger.error(f"Warmup failed: {e}")
 
     def close(self):
-        self._cleanup_model()
+        with self._model_lock:
+            if self._model is not None:
+                try:
+                    del self._model
+                    logger.info("Model resources have been released.")
+                except Exception as e:
+                    logger.error(f"Error cleaning up model resources: {e}")
+                finally:
+                    self._model = None
+                    self._warmup_done = False
+    
+    def __enter__(self):
+        return self
 
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.close()

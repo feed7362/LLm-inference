@@ -17,7 +17,7 @@ def __get_allowed_locals__():
     return math_locals
 
 class CalculatorRequest(BaseModel):
-    expression: str = Field(description="Calculate a mathematical expression with math module support")
+    expression: str = Field(description="Evaluates a mathematical expression")
 
 def calculator(request: CalculatorRequest) -> str:
     try:

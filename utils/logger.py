@@ -4,7 +4,7 @@ import os
 from datetime import datetime
 from logging.handlers import RotatingFileHandler
 
-LOG_DIR = "data/logs"
+LOG_DIR = "./data/logs"
 
 class CustomFormatter(logging.Formatter):
     COLORS = {

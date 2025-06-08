@@ -8,7 +8,7 @@ class ModelSettings(BaseSettings):
     n_batch: int = 512
     use_mlock: bool = True
     use_mmap: bool = True
-    n_ctx: int = 2048
+    n_ctx: int = 16_384
     verbose: bool = True    
 
 class DefaultInputParams(BaseSettings):

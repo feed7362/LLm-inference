@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/.idea/LLm-reference.iml" filepath="$PROJECT_DIR$/.idea/LLm-reference.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/LLm-inference.iml" filepath="$PROJECT_DIR$/.idea/LLm-inference.iml" />
     </modules>
   </component>
 </project>

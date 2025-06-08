@@ -1,6 +1,7 @@
 {
   "name": "Llama GPU DevContainer", 
   "build": { 
+    "context": "..",  
     "dockerfile": "Dockerfile" 
   },
   "runArgs": [

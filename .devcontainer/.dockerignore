@@ -27,11 +27,19 @@ share/python-wheels/
 *.egg
 MANIFEST
 
+# Extra files
+link_list.bin
+*.bin
+*.data
+*.ckpt
+*.pt
+*.safetensors
+
 manual_launch.py
 test.ipynb
 Readme.md
 .env
-Dockerfile
+.devcontainer
 LICENSE
 .git/
 .gitignore
@@ -133,7 +141,6 @@ celerybeat.pid
 *.sage.py
 
 # Environments
-.env
 .venv
 env/
 venv/

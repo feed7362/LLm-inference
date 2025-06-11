@@ -1,5 +1,5 @@
-# Build stage
-FROM nvidia/cuda:12.8.0-devel-ubuntu22.04 AS builder
+# --- Build llama-cpp with CUDA ---
+FROM nvidia/cuda:12.8.0-devel-ubuntu22.04 AS cuda_builder
 
 WORKDIR /app
 
@@ -21,8 +21,7 @@ RUN CMAKE_ARGS="-DLLAMA_CUDA=on" pip install --no-cache-dir git+https://github.c
 
 RUN mkdir -p /llama-cpp/site-packages \
     && cp -r /usr/local/lib/python3*/dist-packages/* /llama-cpp/site-packages/ 
-    
-# Runtime stage
+# --- Runtime stage --- 
 FROM nvidia/cuda:12.8.0-runtime-ubuntu22.04
 
 WORKDIR /app
@@ -37,7 +36,7 @@ RUN pip install --no-cache-dir --upgrade pip \
     langchain-openai langchain_huggingface langgraph langchain_community \
     chromadb unstructured
 
-COPY --from=builder /llama-cpp/site-packages /usr/local/lib/python3.10/dist-packages/
+COPY --from=cuda_builder /llama-cpp/site-packages /usr/local/lib/python3.10/dist-packages/
 
 COPY . .
 

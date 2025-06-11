@@ -1,9 +1,9 @@
 from pydantic_settings import BaseSettings
 
 class ModelSettings(BaseSettings):
-    model_path: str = "models/nlp/qwen2.5-1.5b-instruct-q4_k_m.gguf"
+    model_path: str = "models/nlp/gemma-3-4b-it-q4_0.gguf"
     chat_format: str = "chatml-function-calling"
-    n_gpu_layers: int = 30
+    n_gpu_layers: int = -1
     n_threads: int = 8
     n_batch: int = 512
     use_mlock: bool = True

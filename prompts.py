@@ -1,85 +1,101 @@
-import importlib
-import inspect
-import pkgutil
 import json
-import openai
-import agency
-import os
-from pydantic import BaseModel
+
+from langchain_core.messages import SystemMessage, HumanMessage, AIMessage, ToolMessage, BaseMessage
+from langchain_core.prompts import ChatPromptTemplate, FewShotChatMessagePromptTemplate
+from datetime import date
 
 from utils.logger import CustomLogger
 logger = CustomLogger(__name__)
 
-DEFAULT_METADATA_FILE = "data/metadata/tools.json"
-
-def validate_metadata(metadata_file: str = DEFAULT_METADATA_FILE) -> None:
-    _ensure_directory_exists(metadata_file)
-    if not os.path.exists(metadata_file):
-        logger.warning(f"{metadata_file} not found. Creating a new metadata file.")
-        save_metadata_to_file(metadata_file)
-        return
-    try:
-        with open(metadata_file, "r") as f:
-            existing_metadata = json.load(f)
-        registered_functions = {entry["function"]["name"] for entry in load_tools_metadata()}
-        file_functions = {entry["function"]["name"] for entry in existing_metadata}
-        missing_functions = file_functions - registered_functions
-        if missing_functions:
-            logger.warning(f"Detected tools not registered via decorators: {missing_functions}")
-            save_metadata_to_file(metadata_file)
-    except Exception as error:
-        logger.error(f"Failed to validate metadata: {error}")
-        save_metadata_to_file(metadata_file)
-
-def _ensure_directory_exists(file_path: str) -> None:
-    directory = os.path.dirname(file_path)
-    if directory:
-        os.makedirs(directory, exist_ok=True)
-
-
-def save_metadata_to_file(filepath: str = DEFAULT_METADATA_FILE) -> None:
-    try:
-        schemas = load_tools_metadata()
-        logger.debug(f"{len(schemas)} schemas loaded from {filepath}")
-        with open(filepath, "w") as f:
-            json.dump(schemas, f, indent=2)
-    except Exception as error:
-        logger.error(f"Failed to save metadata: {error}")
-
-def load_tools_metadata() -> list:
-    tool_schemas = []
-    for _, module_name, is_pkg in pkgutil.iter_modules(agency.__path__, agency.__name__ + "."):
-        if is_pkg:
-            continue
-
-        module = importlib.import_module(module_name)
-
-        for _, cls in inspect.getmembers(module, inspect.isclass):
-            if issubclass(cls, BaseModel) and cls is not BaseModel:
-                tool_schema = openai.pydantic_function_tool(cls)
-                tool_schemas.append(tool_schema)
-    logger.debug("Loaded tools metadata: %s", tool_schemas)
-    return tool_schemas
-
-
-def format_input(user_input: list[dict]) -> list[dict]:
+def format_input(messages: str):
     system_message = (
-        "You are an AI assistant. You must always respond text using the function `ResponseRequest`. "
-        "Do not answer with plain text. Every response must be returned as a function call with the full answer inside the argument. "
+        f"""
+        You are an AI assistant that can answer questions and provide information. 
+        Today's date is {date.today().strftime("%B %d %Y")}
+        Don't make assumptions about what values to plug into functions. Ask for clarification if a user request is ambiguous.
+        Answer as many questions as you can using your existing knowledge.  
+        If no tool is needed, answer directly.\n
+        Format all mathematical expressions using LaTeX syntax:\n
+        - Use `\\( ... \\)` for inline math.\n
+        - Use `$$ ... $$` for display math blocks.\n
+        - Do not explain LaTeX, only use it to present math.
+        """
     )
-    latex_instructions = (  
-        "Format all mathematical expressions using LaTeX syntax. \n"
-        "- Use `\\( ... \\)` for inline math.\n"
-        "- Use `$$ ... $$` for display math blocks.\n"
-        "- Do not explain LaTeX, just use it to present math."
-    )
-    return [
-        {
-            "role": "system",
-            "content": f"{system_message}\n{latex_instructions}"
-        },
-        {
-            "role": "user",
-            "content": user_input
+
+    # examples = [
+    #     {"input": "What's the weather in London?",
+    #      "output": "{\"name\":\"get_weather_by_location\",\"arguments\":{\"location\":\"London\"}}"},
+    #     {"input": "Explain Python for-loop.",
+    #      "output": "{\"name\":\"retrieve_context\",\"arguments\":{\"query\":\"Python for-loop tutorial\"}}"},
+    # ]
+    # 
+    # example_prompt = ChatPromptTemplate.from_messages([
+    #     ("user", "{input}"),
+    #     ("assistant", "{output}")
+    # ])
+    # 
+    # few_shot_prompt = FewShotChatMessagePromptTemplate(
+    #     examples=examples,
+    #     example_prompt=example_prompt
+    # )
+    logger.info("Prompt template created successfully.")
+
+    logger.debug("user_message: %s", messages)
+    prompt = ChatPromptTemplate.from_messages([
+        ("system", system_message),
+        # few_shot_prompt,
+        ("user", "{messages}")
+    ])
+    logger.debug("Prompt: %s", prompt)
+
+    return prompt
+
+
+
+def schema_validation(message: BaseMessage) -> dict:
+    if isinstance(message, SystemMessage):
+        pass
+    elif isinstance(message, HumanMessage):
+        pass
+    elif isinstance(message, AIMessage):
+        if "tool_calls" in message.additional_kwargs:
+            tool_calls = []
+            for tool_call in message.additional_kwargs["tool_calls"]:
+                tool_calls.append({
+                    "id": tool_call["id"],
+                    "type": "function",
+                    "function": {
+                        "name": tool_call["function"]["name"].rstrip(':'),
+                        "arguments": tool_call["function"]["arguments"],
+                    }
+                })
+            return {
+                "role": "assistant",
+                "content": str(message.content) or "",
+                "tool_calls": tool_calls
+            }
+        else:
+            return {
+                "role": "assistant",
+                "content": str(message.content) or ""
+            }
+    elif isinstance(message, ToolMessage):
+        content_str = message.content
+        content_json = "{}"
+        if isinstance(content_str, str):
+            try:
+                parsed = json.loads(content_str.replace("'", '"'))
+                content_json = json.dumps(parsed)
+            except Exception:
+                content_json = "{}"
+        return {
+            "role": "tool",
+            "tool_call_id": message.tool_call_id,
+            "name": message.name,
+            "content": content_json or ""
         }
-    ]
+    else:
+        return {
+            "role": "unknown",
+            "content": str(getattr(message, "content", "")) or ""
+        }

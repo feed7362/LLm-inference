@@ -4,7 +4,9 @@ from pydantic import BaseModel
 
 DATE_TIME_FORMAT = "%d-%m-%Y %H:%M:%S"
 
-@tool
+class TimeInput(BaseModel):
+    utc_offset: int
+
 def datetime_now(utc_offset: int = 0) -> str:
     """
     Returns the current date and time with an optional UTC offset in hours.
@@ -23,5 +25,6 @@ datetime_tool = Tool(
         "Returns the current date and time with an optional UTC offset in hours.\n"
         "Input: { utc_offset: int } — e.g., { utc_offset: 3 }\n"
         f"Output: Formatted datetime string in '{DATE_TIME_FORMAT}' format.\n"
-    )
+    ),
+    args_schema=TimeInput
 )

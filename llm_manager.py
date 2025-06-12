@@ -57,7 +57,7 @@ class LLMEngine(metaclass=SingletonMeta):
                     **self._model_kwargs
                 )().with_config(config=RunnableConfig(configurable={
                     "thread_id": str(uuid.uuid4()),
-                    "recursion_limit": 4
+                    "recursion_limit": 50
                 }))
                 logger.info("Model loaded successfully.")
 
@@ -126,9 +126,6 @@ class LangGraphAgent(metaclass=SingletonMeta):
         self.tool_node = ToolNode(self.tool_list, handle_tool_errors=True)
         self.model = Llama(**internal_params)
         self.chat_model = LlamaChatModel(llama=self.model)
-
-        # "thread_id": str(uuid.uuid4()),
-        # "recursion_limit": 4
 
         self.llm_with_tools = self.chat_model.bind_tools(tools=self.tool_list, tool_choice="auto").with_config(
             config=RunnableConfig(configurable={"temperature": 0.0}))

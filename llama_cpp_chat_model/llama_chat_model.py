@@ -2,8 +2,8 @@ from llama_cpp import Llama
 
 from langchain_openai.chat_models.base import BaseChatOpenAI
 
-from .llama_client import LLamaOpenAIClient
-from .llama_client_async import LLamaOpenAIClientAsync
+from llama_cpp_chat_model.llama_client import LLamaOpenAIClient
+from llama_cpp_chat_model.llama_client_async import LLamaOpenAIClientAsync
 
 
 class LlamaChatModel(BaseChatOpenAI):

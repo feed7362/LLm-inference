@@ -16,12 +16,11 @@ RUN pip install --no-cache-dir --upgrade pip \
 RUN pip install --no-cache-dir --upgrade pip \
     && pip install --no-cache-dir cmake scikit-build setuptools
     
-#RUN CMAKE_ARGS="-DGGML_CUDA=on" pip install --no-cache-dir llama-cpp-python
-RUN CMAKE_ARGS="-DLLAMA_CUDA=on" pip install --no-cache-dir git+https://github.com/abetlen/llama-cpp-python.git
+RUN CMAKE_ARGS="-DLLAMA_CUDA=on" pip install --no-cache-dir llama-cpp-python
 
 RUN mkdir -p /llama-cpp/site-packages \
-    && cp -r /usr/local/lib/python3*/dist-packages/* /llama-cpp/site-packages/ 
-# --- Runtime stage --- 
+    && cp -r /usr/local/lib/python3*/dist-packages/* /llama-cpp/site-packages/
+# --- Runtime stage ---
 FROM nvidia/cuda:12.8.0-runtime-ubuntu22.04
 
 WORKDIR /app

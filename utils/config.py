@@ -3,12 +3,12 @@ from pydantic_settings import BaseSettings
 class ModelSettings(BaseSettings):
     model_path: str = "models/nlp/gemma-3-4b-it-q4_0.gguf"
     chat_format: str = "chatml-function-calling"
-    n_gpu_layers: int = -1
+    n_gpu_layers: int = 20
     n_threads: int = 8
-    n_batch: int = 512
-    use_mlock: bool = True
+    n_batch: int = 256 
+    use_mlock: bool = False
     use_mmap: bool = True
-    n_ctx: int = 16_384
+    n_ctx: int = 4096
     verbose: bool = True    
 
 class DefaultInputParams(BaseSettings):

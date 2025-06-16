@@ -10,9 +10,8 @@ __pycache__/
 *.pyc
 *.pyo
 *.pyd
+.log
 
 # Large model files
-models/
-data/
 test/
 *.gguf

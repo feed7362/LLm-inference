@@ -10,7 +10,7 @@
 - 🧠 **Local LLM support**: Optimized for models like Gemma 3B, served through `llama-cpp-python`.
 - 🔧 **Tool use via LangChain**: Code execution, calculator, weather, and custom tools (experimental).
 - 🌐 **WebSocket API**: Real-time inference with client-server communication over WS.
-- 🧱 **LangGraph agent support**: Supports multi-step agent workflows.
+- 🧱 **LangGraph agent support**: Supports multistep agent workflows.
 - 🐳 **Docker-native**: Lightweight multi-stage Docker build reduces final image size.
 - ⚙️ **Devcontainer support**: Preconfigured for VSCode DevContainers.
 
@@ -101,7 +101,7 @@ The following tools are integrated (statically or dynamically):
 - 📚 RAG – retrieval-augmented generation (if vector store is configured)
 - 💻 code – code execution (sandboxed)
 
-⚠️ These tools are partially tested and may require stability improvements.
+> ⚠️ These tools are partially tested and may require stability improvements.
 
 ---
 
@@ -121,9 +121,12 @@ Use the following guidelines for contributions:
 - Fork the repo and create a feature branch
 - Use devcontainer for development with cuda support
 - Document your changes and test tools locally
-- Submit a pull request with clear description of changes
+- Submit a pull request with a clear description of changes
 
+> Note: You can use manual_launch.py to run the server without Docker for local testing.
 ---
 
 ### 📄 License
-MIT License © 2025
+This project is licensed under the MIT License © 2025.
+
+> Note: The Gemma 3B model is developed and distributed by Google DeepMind under its own license terms. Refer to their official model repository for usage and licensing details.

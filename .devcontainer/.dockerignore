@@ -29,7 +29,6 @@ MANIFEST
 
 # Extra files
 link_list.bin
-*.bin
 *.data
 *.ckpt
 *.pt

@@ -1,3 +1,4 @@
+import os
 from langchain_community.document_loaders import UnstructuredURLLoader
 from langchain_community.embeddings import HuggingFaceEmbeddings
 from langchain_community.vectorstores import Chroma
@@ -19,7 +20,9 @@ def retrieve_context(query: str) -> str:
     loader = UnstructuredURLLoader(urls=urls)
     docs = loader.load()
 
-    text_splitter = RecursiveCharacterTextSplitter(chunk_size=100, chunk_overlap=50)
+    text_splitter = RecursiveCharacterTextSplitter(
+        chunk_size=100, chunk_overlap=50
+    )
     doc_splits = text_splitter.split_documents(docs)
 
     persist_dir = "../data/chroma"
@@ -30,7 +33,7 @@ def retrieve_context(query: str) -> str:
         documents=doc_splits,
         collection_name="python_docs",
         embedding=HuggingFaceEmbeddings(model_name="BAAI/bge-small-en-v1.5"),
-        persist_directory="../data/chroma"
+        persist_directory=persist_dir
     )
     retriever = vectorstore.as_retriever()
     results = retriever.invoke(query)

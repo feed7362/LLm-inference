@@ -34,9 +34,8 @@ get_weather_tool = Tool(
     name="get_weather_by_location",
     func=get_weather_by_location,
     description=(
-        "Returns current weather conditions for a specified city or location.\n"
-        "Input: { location: string } — e.g., { location: 'New York' }.\n"
-        "Output: JSON string with keys like 'temperature', 'humidity', 'wind_speed', etc.\n"
+        "Useful for when you want to get weather information from the OpenMeteo API."
+        "The input should be a question in natural language that this API can answer."
     ),
     args_schema=WeatherInput
 )

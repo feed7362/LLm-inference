@@ -10,7 +10,7 @@ from llama_cpp_chat_model.llama_chat_model import LlamaChatModel
 import importlib
 import inspect
 import os
-from langchain_core.messages import BaseMessage, AIMessage, SystemMessage, ToolMessage
+from langchain_core.messages import BaseMessage, AIMessage, SystemMessage, ToolMessage, HumanMessage
 from langchain_core.runnables import RunnableConfig
 from langchain_core.tools.simple import Tool
 from langgraph.graph import add_messages, StateGraph
@@ -82,7 +82,7 @@ class LLMEngine(metaclass=SingletonMeta):
             self._load_model()
             logger.info("Warming up the model...")
             self._model.invoke({
-                "messages": [{"role": "user", "content": "Hello"}]
+                "messages": [HumanMessage(content="Hello")]
             })
             self._warmup_done = True
             logger.info("Warmup complete.")
@@ -120,7 +120,7 @@ class LangGraphAgent(metaclass=SingletonMeta):
         if internal_params is None:
             internal_params = {}
 
-        self.tool_list = load_tools_from_folder("./agency", package_prefix="agency")
+        self.tool_list = load_tools_from_folder("./tools", package_prefix="tools")
         logger.debug(f"Loaded tools: {[tool.name for tool in self.tool_list]}")
 
         self.tool_node = ToolNode(self.tool_list, handle_tool_errors=True)

@@ -38,7 +38,9 @@ class CustomLogger(logging.Logger):
         
         formatter = CustomFormatter("%(asctime)s - %(levelname)s - %(name)s - %(message)s")
         log_file = os.path.join(dated_log_dir, f"{self.name}.log")
-
+        for uvicorn_logger in ["uvicorn", "uvicorn.error", "uvicorn.access"]:
+            logging.getLogger(uvicorn_logger).handlers.clear()
+            logging.getLogger(uvicorn_logger).propagate = False
         rotating_handler = RotatingFileHandler(log_file, maxBytes=5 * 1024 * 1024, backupCount=5)
         rotating_handler.setFormatter(formatter)
         self.addHandler(rotating_handler)

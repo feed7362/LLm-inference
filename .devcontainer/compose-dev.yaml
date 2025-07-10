@@ -1,26 +1,20 @@
-version: "3.8"
-
 services:
   llama_dev:
     build:
-      context: .
-      dockerfile: Dockerfile
+      context: ..
+      dockerfile: .devcontainer/Dockerfile
     ports:
       - "2222:2222"
-    container_name: llama_dev_container
+    container_name: llama_container
     deploy:
       resources:
         reservations:
           devices:
             - driver: nvidia
               count: all
-              capabilities: [gpu]
+              capabilities: [ gpu ]
     volumes:
-      - .:/app
-    working_dir: /app
-    tty: true
-    stdin_open: true
-    environment:
-      - CUDA_DOCKER_ARCH=all
-      - GGML_CUDA=1
-    command: ["/bin/bash"]
+      - chroma_data:/data/chroma
+
+volumes:
+  chroma_data:      

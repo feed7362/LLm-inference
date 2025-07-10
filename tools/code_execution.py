@@ -6,7 +6,7 @@ class CodeInput(BaseModel):
     
 def execute_code(code: str) -> str:
     """
-    Executes Python code in a safe environment. Retrieves variable `result` if set.
+    Executes Python code in a safe environment.
     """
     local_context = {}
     try:
@@ -20,9 +20,9 @@ code_execution_tool = Tool(
     name="execute_code",
     func=execute_code,
     description=(
-        "Executes Python code in a sandboxed environment.\n"
-        "Input: { code: string } — Python code where the final result must be assigned to a variable named `result`.\n"
-        "Output: The value of `result`, or an error message if execution fails.\n"
+        "Use only when the user explicitly asks to execute Python code. "
+        "NEVER use this tool to answer general questions, weather, search, or chat. "
+        "Input: { code: string } — Python code where the final result must be assigned to a variable named `result`."
     ),
     args_schema=CodeInput
 )

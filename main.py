@@ -10,12 +10,13 @@ logger = CustomLogger(__name__)
 def initialize_engine() -> LLMEngine:
     params = {
         "max_tokens": 512,
-        "stop": ["<|im_end|>"],
-        "temperature": 0.7,
+        "stop": ["<|im_end|>", "<|im_start|>", "<|file_separator|>"],
+        "temperature": 0.4,
         "top_k": 40,
         "max_retries": 3,
-        "top_p": 0.95,
+        "top_p": 0.75,
         "frequency_penalty": 1.2,
+        "min_p": 0.0,
     }
     engine = LLMEngine(**params)
     engine.warmup()

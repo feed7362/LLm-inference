@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from llm_manager import LLMEngine
-from websocket import websocket_router
+from websocket_client import websocket_router
 from contextlib import asynccontextmanager
 
 from utils.logger import CustomLogger

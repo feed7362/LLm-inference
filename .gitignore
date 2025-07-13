@@ -13,6 +13,6 @@ __pycache__/
 .log
 
 # Large model files
-test/
 *.gguf
 *.bin
+/prototypes/

@@ -46,7 +46,7 @@ RUN pip install --upgrade pip \
     fastapi uvicorn[standard] sse-starlette \
     pydantic-settings starlette-context huggingface-hub \
     langchain-openai langchain_huggingface langgraph langchain_community \
-    chromadb unstructured selectolax sentence_transformers
+    chromadb unstructured selectolax sentence_transformers pytest-cov
 
 COPY . .
 

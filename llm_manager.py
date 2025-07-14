@@ -33,8 +33,7 @@ class SingletonMeta(type):
         with cls._lock:
             if cls not in cls._instances:
                 logger.debug("Creating new LLMEngine instance")
-                instance = super().__call__(*args, **kwargs)
-                cls._instances[cls] = instance
+                cls._instances[cls] = super(SingletonMeta, cls).__call__(*args, **kwargs)
             else:
                 logger.debug("Reusing existing LLMEngine instance")
         return cls._instances[cls]

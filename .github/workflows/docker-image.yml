@@ -8,7 +8,7 @@ on:
 
 jobs:
   build:
-    runs-on: [ self-hosted, gpu, cuda ]
+    runs-on: [ self-hosted, docker ]
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -26,7 +26,7 @@ jobs:
 
   test:
     needs: build
-    runs-on: [ self-hosted, gpu, cuda ]
+    runs-on: [ self-hosted, docker ]
     steps:
       - name: Checkout code
         uses: actions/checkout@v4

@@ -31,6 +31,10 @@ RUN mkdir -p /llama-cpp/site-packages \
 # --- Runtime stage ---
 FROM nvidia/cuda:12.8.0-runtime-ubuntu22.04
 
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
+ENV UV_SYSTEM_PYTHON=1
+ENV UV_COMPILE_BYTECODE=1
+
 WORKDIR /app
 
 RUN apt-get update && apt-get install -y python3-pip git \
@@ -41,14 +45,9 @@ COPY --from=cuda_builder /whisper/build/bin /usr/local/bin/whisper
 
 ENV PATH="/usr/local/bin/whisper:${PATH}"
 
-RUN pip install --upgrade pip \
-    && pip install \
-    fastapi uvicorn[standard] sse-starlette \
-    pydantic-settings starlette-context huggingface-hub \
-    langchain-openai langchain_huggingface langgraph langchain_community \
-    chromadb unstructured selectolax sentence_transformers pytest-cov
-
 COPY . .
+
+RUN uv pip install -r pyproject.toml
 
 EXPOSE 2222
 

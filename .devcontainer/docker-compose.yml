@@ -1,0 +1,52 @@
+services:
+  inference:
+    build:
+      context: ..
+      dockerfile: .devcontainer/Dockerfile
+      
+    develop:
+      watch:
+        - action: sync
+          path: .
+          target: /app
+          ignore:
+            - .venv/
+        - action: rebuild
+          path: ./pyproject.toml
+    ports:
+      - "2222:2222"
+    container_name: inference_container
+    environment:
+      - NVIDIA_VISIBLE_DEVICES=all
+    runtime: nvidia
+    volumes:
+      - chroma_data:/data/chroma
+    depends_on:
+      - postgres
+  
+  postgres:
+    image: postgres:latest
+    env_file:
+      - .env
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_PORT: ${POSTGRES_PORT}
+    ports:
+      - "${POSTGRES_PORT}:${POSTGRES_PORT}"
+    volumes:
+      - postgres_data:/data/postgresql
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}" ]
+      interval: 1m30s
+      timeout: 5s
+      retries: 5
+      start_period: 40s
+    restart: unless-stopped
+
+volumes:
+  chroma_data:      
+  postgres_data:
+
+# docker compose --env-file ./env/database.env -f ./Docker/docker-compose.yml build

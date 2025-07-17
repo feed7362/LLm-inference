@@ -29,8 +29,8 @@ RUN mkdir -p /llama-cpp/site-packages \
 FROM nvidia/cuda:12.8.0-runtime-ubuntu22.04
 
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
-ENV UV_SYSTEM_PYTHON=1
 ENV UV_COMPILE_BYTECODE=1
+ENV UV_LINK_MODE=copy 
 
 WORKDIR /app
 
@@ -41,12 +41,15 @@ COPY --from=cuda_builder /llama-cpp/site-packages /usr/local/lib/python3.10/dist
 COPY --from=cuda_builder /whisper/build/bin /usr/local/bin/whisper
 
 ENV PATH="/usr/local/bin/whisper:${PATH}"
-ENV UV_LINK_MODE=copy 
+ENV PATH="/app/.venv/bin:$PATH"
+
 # Use copy mode for hardlinking
 
 COPY . .
 
-RUN uv pip install -r pyproject.toml
+RUN uv sync  \
+    uv compile --no-cache-dir
+
 
 EXPOSE 2222
 

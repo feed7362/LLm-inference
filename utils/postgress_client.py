@@ -4,7 +4,7 @@ from sqlalchemy.ext.declarative import declarative_base
 from config import database_settings as settings
 from sqlalchemy import MetaData, select
 
-DATABASE_URL = f"postgresql+asyncpg://{settings.POSTGRES_USER}:{settings.POSTGRES_PASS}@{settings.POSTGRES_HOST}:{settings.POSTGRES_PORT}/{settings.POSTGRES_NAME}"
+DATABASE_URL = f"postgresql+asyncpg://{settings.POSTGRES_USER}:{settings.POSTGRES_PASSWORD}@{settings.POSTGRES_HOST}:{settings.POSTGRES_PORT}/{settings.POSTGRES_DB}"
 async_engine = create_async_engine(DATABASE_URL, echo=True)
 LOGGER.info("Database connection established")
 metadata = MetaData()

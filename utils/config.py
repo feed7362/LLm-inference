@@ -13,6 +13,16 @@ class ServiceSettings(BaseSettings):
         env_file = './config/prod.env'
 
 
+class DatabaseSettings(BaseAppSettings):
+    POSTGRES_HOST: str
+    POSTGRES_PORT: str
+    POSTGRES_DB: str
+    POSTGRES_USER: str
+    POSTGRES_PASSWORD: str
+
+    class Config:
+        env_file = './config/database.env'
+
 class ModelSettings(BaseSettings):
     model_path: str = "models/nlp/gemma-3-4b-it-qat-UD-Q5_K_XL.gguf"
     chat_format: str = "chatml-function-calling"
@@ -26,3 +36,4 @@ class ModelSettings(BaseSettings):
 
 
 service_settings = ServiceSettings()
+database_settings = DatabaseSettings()

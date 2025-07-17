@@ -1,7 +1,7 @@
 from dotenv import load_dotenv
 from pydantic_settings import BaseSettings
 
-load_dotenv("./config/dev.config", override=True)
+load_dotenv("./config/dev.env", override=True)
 
 
 class ServiceSettings(BaseSettings):
@@ -10,7 +10,7 @@ class ServiceSettings(BaseSettings):
 
     class Config:
         env_file_encoding = 'utf-8'
-        env_file = './config/prod.config'
+        env_file = './config/prod.env'
 
 
 class ModelSettings(BaseSettings):

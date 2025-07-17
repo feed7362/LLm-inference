@@ -12,9 +12,6 @@ RUN apt update \
 
 RUN pip install --upgrade pip \
     && pip install cmake scikit-build setuptools
-
-RUN pip install --upgrade pip \
-    && pip install  cmake scikit-build setuptools
     
 RUN CMAKE_ARGS="-DLLAMA_CUDA=on -DCMAKE_CUDA_ARCHITECTURES=75\;86\;89" pip install llama-cpp-python
 
@@ -26,7 +23,7 @@ RUN git clone https://github.com/ggerganov/whisper.cpp.git . && \
 # Copy the built whisper binary and avoiding the need for .so files
 
 RUN mkdir -p /llama-cpp/site-packages \
-    && cp -r /usr/local/lib/python3*/dist-packages/* /llama-cpp/site-packages/
+    && cp -r /usr/local/lib/python3.*/dist-packages/llama_cpp* /llama-cpp/site-packages/
 
 # --- Runtime stage ---
 FROM nvidia/cuda:12.8.0-runtime-ubuntu22.04
@@ -44,6 +41,8 @@ COPY --from=cuda_builder /llama-cpp/site-packages /usr/local/lib/python3.10/dist
 COPY --from=cuda_builder /whisper/build/bin /usr/local/bin/whisper
 
 ENV PATH="/usr/local/bin/whisper:${PATH}"
+ENV UV_LINK_MODE=copy 
+# Use copy mode for hardlinking
 
 COPY . .
 

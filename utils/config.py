@@ -13,7 +13,7 @@ class ServiceSettings(BaseSettings):
         env_file = './config/prod.env'
 
 
-class DatabaseSettings(BaseAppSettings):
+class DatabaseSettings(BaseSettings):
     POSTGRES_HOST: str
     POSTGRES_PORT: str
     POSTGRES_DB: str

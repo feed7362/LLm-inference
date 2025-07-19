@@ -1,4 +1,6 @@
-# --- Build llama-cpp with CUDA ---
+############################################################
+# Builder stage: compile llama-cpp-python & whisper.cpp with CUDA
+############################################################
 FROM nvidia/cuda:12.8.0-devel-ubuntu22.04 AS cuda_builder
 
 WORKDIR /app
@@ -7,12 +9,11 @@ ENV CUDA_DOCKER_ARCH=all
 ENV GGML_CUDA=1
 
 RUN apt update \
-    && apt install -y python3-pip cmake g++ wget git ninja-build gcc build-essential \
+    && apt install -y --no-install-recommends python3-pip cmake g++ wget git ninja-build gcc build-essential \
     && apt autoremove -y && rm -rf /var/lib/apt/lists/*
 
-RUN pip install --upgrade pip \
-    && pip install cmake scikit-build setuptools
-    
+RUN pip3 install --no-cache-dir --upgrade pip cmake scikit-build setuptools
+
 RUN CMAKE_ARGS="-DLLAMA_CUDA=on -DCMAKE_CUDA_ARCHITECTURES=75\;86\;89" pip install llama-cpp-python
 
 WORKDIR /whisper
@@ -23,33 +24,37 @@ RUN git clone https://github.com/ggerganov/whisper.cpp.git . && \
 # Copy the built whisper binary and avoiding the need for .so files
 
 RUN mkdir -p /llama-cpp/site-packages \
-    && cp -r /usr/local/lib/python3.*/dist-packages/llama_cpp* /llama-cpp/site-packages/
+    && cp -r /usr/local/lib/python3*/dist-packages/* /llama-cpp/site-packages/
 
-# --- Runtime stage ---
+############################################################
+# Runtime stage
+############################################################
 FROM nvidia/cuda:12.8.0-runtime-ubuntu22.04
 
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 ENV UV_COMPILE_BYTECODE=1
-ENV UV_LINK_MODE=copy 
+ENV UV_LINK_MODE=copy
+ENV UV_PROJECT_ENVIRONMENT="/opt/venv"
 
 WORKDIR /app
 
-RUN apt-get update && apt-get install -y python3-pip git \
-    && apt-get autoremove -y && rm -rf /var/lib/apt/lists/*
-
-COPY --from=cuda_builder /llama-cpp/site-packages /usr/local/lib/python3.10/dist-packages/
-COPY --from=cuda_builder /whisper/build/bin /usr/local/bin/whisper
-
-ENV PATH="/usr/local/bin/whisper:${PATH}"
-ENV PATH="/app/.venv/bin:$PATH"
-
-# Use copy mode for hardlinking
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends python3-pip git libgomp1 && \
+    rm -rf /var/lib/apt/lists/*
 
 COPY . .
 
-RUN uv sync  \
-    uv compile --no-cache-dir
+RUN uv sync --no-dev &&  \
+    uv venv /opt/venv
 
+ENV PATH="/opt/venv/bin:${PATH}"
+
+COPY --from=cuda_builder /llama-cpp/site-packages /opt/venv/lib/python3.10/site-packages/
+COPY --from=cuda_builder /whisper/build/bin /usr/local/bin/whisper
+ENV PATH="/usr/local/bin/whisper:${PATH}"
+
+# Ставим сам пакет
+RUN uv pip install .
 
 EXPOSE 2222
 

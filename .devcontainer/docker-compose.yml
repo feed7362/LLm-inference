@@ -19,7 +19,6 @@ services:
       - NVIDIA_VISIBLE_DEVICES=all
     volumes:
       - chroma_data:/data/chroma
-    command: sleep infinity
     depends_on:
       - postgres
   

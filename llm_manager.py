@@ -1,16 +1,18 @@
 import uuid
-from typing import (
-    Annotated,
-    Sequence,
-    TypedDict
-)
+from typing import Annotated, Sequence, TypedDict
 
 from langgraph.constants import END
 from llama_cpp_chat_model.llama_chat_model import LlamaChatModel
 import importlib
 import inspect
 import os
-from langchain_core.messages import BaseMessage, AIMessage, SystemMessage, ToolMessage, HumanMessage
+from langchain_core.messages import (
+    BaseMessage,
+    AIMessage,
+    SystemMessage,
+    ToolMessage,
+    HumanMessage,
+)
 from langchain_core.runnables import RunnableConfig
 from langchain_core.tools.simple import Tool
 from langgraph.graph import add_messages, StateGraph
@@ -33,7 +35,9 @@ class SingletonMeta(type):
         with cls._lock:
             if cls not in cls._instances:
                 logger.debug("Creating new LLMEngine instance")
-                cls._instances[cls] = super(SingletonMeta, cls).__call__(*args, **kwargs)
+                cls._instances[cls] = super(SingletonMeta, cls).__call__(
+                    *args, **kwargs
+                )
             else:
                 logger.debug("Reusing existing LLMEngine instance")
         return cls._instances[cls]
@@ -52,12 +56,15 @@ class LLMEngine(metaclass=SingletonMeta):
                 logger.info("Loading LLM model...")
                 base_settings = ModelSettings().model_dump()
                 self._model = LangGraphAgent(
-                    internal_params=base_settings,
-                    **self._model_kwargs
-                )().with_config(config=RunnableConfig(configurable={
-                    "thread_id": str(uuid.uuid4()),
-                    "recursion_limit": 50
-                }))
+                    internal_params=base_settings, **self._model_kwargs
+                )().with_config(
+                    config=RunnableConfig(
+                        configurable={
+                            "thread_id": str(uuid.uuid4()),
+                            "recursion_limit": 50,
+                        }
+                    )
+                )
                 logger.info("Model loaded successfully.")
 
     def infer(self, inputs: list, stream: bool = False):
@@ -67,22 +74,15 @@ class LLMEngine(metaclass=SingletonMeta):
         logger.info(f"Running inference with prompt: {inputs}")
 
         if stream:
-            return self._model.astream(
-                {"messages": inputs},
-                stream_mode="values"
-            )
+            return self._model.astream({"messages": inputs}, stream_mode="values")
         else:
-            return self._model.invoke(
-                {"messages": inputs}
-            )
+            return self._model.invoke({"messages": inputs})
 
     def warmup(self):
         try:
             self._load_model()
             logger.info("Warming up the model...")
-            self._model.invoke({
-                "messages": [HumanMessage(content="Hello")]
-            })
+            self._model.invoke({"messages": [HumanMessage(content="Hello")]})
             self._warmup_done = True
             logger.info("Warmup complete.")
         except Exception as e:
@@ -109,6 +109,7 @@ class LLMEngine(metaclass=SingletonMeta):
 
 class AgentState(TypedDict):
     """The state of the agent."""
+
     # add_messages is a reducer
     # See https://langchain-ai.github.io/langgraph/concepts/low_level/#reducers
     messages: Annotated[Sequence[BaseMessage], add_messages]
@@ -126,11 +127,13 @@ class LangGraphAgent(metaclass=SingletonMeta):
         self.model = Llama(**internal_params)
         self.chat_model = LlamaChatModel(llama=self.model)
 
-        self.llm_with_tools = self.chat_model.bind_tools(tools=self.tool_list, tool_choice="auto").with_config(
-            config=RunnableConfig(configurable={"temperature": 0.0}))
+        self.llm_with_tools = self.chat_model.bind_tools(
+            tools=self.tool_list, tool_choice="auto"
+        ).with_config(config=RunnableConfig(configurable={"temperature": 0.0}))
 
         self.llm = self.chat_model.with_config(
-            config=RunnableConfig(configurable={**model_kwargs}))
+            config=RunnableConfig(configurable={**model_kwargs})
+        )
 
         self.app = self._build_workflow()
 
@@ -139,7 +142,9 @@ class LangGraphAgent(metaclass=SingletonMeta):
             messages = state["messages"]
             last_message = messages[-1]
 
-            if isinstance(last_message, AIMessage) and getattr(last_message, "tool_calls", None):
+            if isinstance(last_message, AIMessage) and getattr(
+                last_message, "tool_calls", None
+            ):
                 return "continue"
             else:
                 return "end"
@@ -195,7 +200,9 @@ def load_tools_from_folder(folder_path: str, package_prefix: str = "") -> list[T
             continue
 
         module_name = filename[:-3]
-        import_path = f"{package_prefix}.{module_name}" if package_prefix else module_name
+        import_path = (
+            f"{package_prefix}.{module_name}" if package_prefix else module_name
+        )
 
         try:
             module = importlib.import_module(import_path)

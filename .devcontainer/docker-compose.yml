@@ -18,7 +18,7 @@ services:
     environment:
       - NVIDIA_VISIBLE_DEVICES=all
     volumes:
-      - chroma_data:/data/chroma
+      - chroma_data:/app/data/chroma
     depends_on:
       - postgres
   
@@ -35,7 +35,7 @@ services:
     ports:
       - "${POSTGRES_PORT}:${POSTGRES_PORT}"
     volumes:
-      - postgres_data:/data/postgresql
+      - postgres_data:/app/data/postgresql
     healthcheck:
       test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}" ]
       interval: 1m30s

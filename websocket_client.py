@@ -7,10 +7,7 @@ from utils.logger import CustomLogger
 
 logger = CustomLogger(__name__)
 
-websocket_router = APIRouter(
-    prefix="",
-    tags=["websocket"]
-)
+websocket_router = APIRouter(prefix="", tags=["websocket"])
 
 
 @websocket_router.websocket("/stream")
@@ -22,9 +19,9 @@ async def stream_websocket(websocket: WebSocket):
             logger.debug("Data received from WebSocket: %s", parsed_data)
 
             if not isinstance(parsed_data, dict) or "messages" not in parsed_data:
-                await websocket.send_json({
-                    "error": "Must be Json object type: {'messages': [ ... ]}"
-                })
+                await websocket.send_json(
+                    {"error": "Must be Json object type: {'messages': [ ... ]}"}
+                )
                 continue
 
             messages = parsed_data["messages"]

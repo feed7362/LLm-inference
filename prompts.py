@@ -1,6 +1,12 @@
 import json
 
-from langchain_core.messages import SystemMessage, HumanMessage, AIMessage, ToolMessage, BaseMessage
+from langchain_core.messages import (
+    SystemMessage,
+    HumanMessage,
+    AIMessage,
+    ToolMessage,
+    BaseMessage,
+)
 from langchain_core.prompts import ChatPromptTemplate
 
 from llm_manager import load_tools_from_folder
@@ -9,16 +15,17 @@ from utils.logger import CustomLogger
 logger = CustomLogger(__name__)
 
 tool_list = load_tools_from_folder("./tools", package_prefix="tools")
-tool_schemas = "\n".join([
-    f"- {tool.name}: {tool.description.replace('{', '{{').replace('}', '}}')}"
-    for tool in tool_list
-])
+tool_schemas = "\n".join(
+    [
+        f"- {tool.name}: {tool.description.replace('{', '{{').replace('}', '}}')}"
+        for tool in tool_list
+    ]
+)
 logger.debug("Tool schemas loaded: %s", tool_schemas)
 
 
 def format_input(messages: str):
-    system_message = (
-        f"""
+    system_message = f"""
         You are a helpful assistant that can use tools to get information for the user.
         
         # Content Safety:
@@ -67,14 +74,12 @@ def format_input(messages: str):
         - Use `$$ ... $$` for display math blocks.\n
         - Do not explain LaTeX, only use it to present math.
         """.strip()
-    )
     logger.info("Prompt template created successfully.")
 
     logger.debug("user_message: %s", messages)
-    prompt = ChatPromptTemplate.from_messages([
-        SystemMessage(content=system_message),
-        HumanMessage(content=messages)
-    ])
+    prompt = ChatPromptTemplate.from_messages(
+        [SystemMessage(content=system_message), HumanMessage(content=messages)]
+    )
     logger.debug("Prompt: %s", prompt)
 
     return prompt
@@ -89,24 +94,23 @@ def schema_validation(message: BaseMessage) -> dict | None:
         if "tool_calls" in message.additional_kwargs:
             tool_calls = []
             for tool_call in message.additional_kwargs["tool_calls"]:
-                tool_calls.append({
-                    "id": tool_call["id"],
-                    "type": "function",
-                    "function": {
-                        "name": tool_call["function"]["name"].rstrip(':'),
-                        "arguments": tool_call["function"]["arguments"],
+                tool_calls.append(
+                    {
+                        "id": tool_call["id"],
+                        "type": "function",
+                        "function": {
+                            "name": tool_call["function"]["name"].rstrip(":"),
+                            "arguments": tool_call["function"]["arguments"],
+                        },
                     }
-                })
+                )
             return {
                 "role": "assistant",
                 "content": str(message.content) or "",
-                "tool_calls": tool_calls
+                "tool_calls": tool_calls,
             }
         else:
-            return {
-                "role": "assistant",
-                "content": str(message.content) or ""
-            }
+            return {"role": "assistant", "content": str(message.content) or ""}
     elif isinstance(message, ToolMessage):
         content_str = message.content
         content_json = "{}"
@@ -121,10 +125,10 @@ def schema_validation(message: BaseMessage) -> dict | None:
             "role": "tool",
             "tool_call_id": message.tool_call_id,
             "name": message.name,
-            "content": content_json or ""
+            "content": content_json or "",
         }
     else:
         return {
             "role": "unknown",
-            "content": str(getattr(message, "content", "")) or ""
+            "content": str(getattr(message, "content", "")) or "",
         }

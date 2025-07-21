@@ -55,7 +55,7 @@ LLm-inference/
 ### 📁 Clone the repo
 
 ```bash
-git clone https://github.com/yourname/llm-inference.git
+git clone https://github.com/feed7362/llm-inference.git
 cd llm-inference
 ```
 ### 🐳 Build & Run via Docker
@@ -100,6 +100,7 @@ The following tools are integrated (statically or dynamically):
 - 🌤️ weather – mock or real-time weather info
 - 📚 RAG – retrieval-augmented generation (if vector store is configured)
 - 💻 code – code execution (sandboxed)
+- 🔍 search – search engine integration (e.g., Google Custom Search API)
 
 > ⚠️ These tools are partially tested and may require stability improvements.
 

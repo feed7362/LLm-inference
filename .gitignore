@@ -5,6 +5,10 @@
 .idea/
 .vscode/
 
+data/audio
+data/chroma
+data/logs
+
 *.pyc
 *.pyo
 *.pyd

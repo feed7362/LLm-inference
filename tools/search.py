@@ -23,7 +23,7 @@ async def search_tool(search_query: str) -> Union[List[str], str]:
         "q": search_query,
         "key": settings.SEARCH_API_KEY,
         "cx": settings.CX,
-        "num": 5
+        "num": 5,
     }
 
     try:
@@ -34,7 +34,7 @@ async def search_tool(search_query: str) -> Union[List[str], str]:
             items = result.get("items", [])
             if not items:
                 return []
-            urls = [item['link'] for item in items]
+            urls = [item["link"] for item in items]
             return urls if isinstance(urls, list) else []
     except Exception as e:
         return f"Search failed: {str(e)}"
@@ -51,10 +51,16 @@ def clean_html_text(node) -> str:
         if not text:
             continue
         # Skip CSS class or variable dump
-        if re.match(r"^\..*{|^--|^@media|{.*}", text):  # style declarations or media queries
+        if re.match(
+            r"^\..*{|^--|^@media|{.*}", text
+        ):  # style declarations or media queries
             continue
         # Skip over anything resembling raw CSS
-        if ":" in text and ";" in text and re.search(r"--|font|margin|padding|color", text):
+        if (
+            ":" in text
+            and ";" in text
+            and re.search(r"--|font|margin|padding|color", text)
+        ):
             continue
         if len(text) < 3:
             continue  # skip noise like "." or single chars
@@ -78,7 +84,9 @@ async def extract_html(url):
             response.raise_for_status()
             return response.text
         except httpx.HTTPStatusError as e:
-            logger.error(f"Failed to fetch {url}: {e.response.status_code} | {e.response.reason_phrase}")
+            logger.error(
+                f"Failed to fetch {url}: {e.response.status_code} | {e.response.reason_phrase}"
+            )
             return "Error fetching page"
 
 
@@ -136,12 +144,9 @@ async def web_search_tool(search_input: str) -> List[Tuple[str, List[dict]]]:
                 "url_index": urls[idx],
                 "content": main_text,
                 "tables": [
-                    {
-                        "headers": table["headers"],
-                        "rows": table["rows"]
-                    }
+                    {"headers": table["headers"], "rows": table["rows"]}
                     for table in tables
-                ]
+                ],
             }
         )
     await generate_new_result(search_input, str(final_result))
@@ -159,7 +164,7 @@ search_api_tool = Tool(
     func=sync_web_search_tool,
     description=(
         "Useful for when you need to answer questions about current events. "
-        "Input should be a search query."        
+        "Input should be a search query."
         "Returns a list of structured results including cleaned content and any tables found."
     ),
     args_schema=SearchInput,

@@ -9,8 +9,8 @@ class ServiceSettings(BaseSettings):
     CX: str
 
     class Config:
-        env_file_encoding = 'utf-8'
-        env_file = './config/prod.env'
+        env_file_encoding = "utf-8"
+        env_file = "./config/prod.env"
 
 
 class DatabaseSettings(BaseSettings):
@@ -21,7 +21,8 @@ class DatabaseSettings(BaseSettings):
     POSTGRES_PASSWORD: str
 
     class Config:
-        env_file = './config/database.env'
+        env_file = "./config/database.env"
+
 
 class ModelSettings(BaseSettings):
     model_path: str = "models/nlp/gemma-3-4b-it-qat-UD-Q5_K_XL.gguf"

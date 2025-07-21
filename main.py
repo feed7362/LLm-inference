@@ -5,7 +5,9 @@ from websocket_client import websocket_router
 from contextlib import asynccontextmanager
 
 from utils.logger import CustomLogger
+
 logger = CustomLogger(__name__)
+
 
 def initialize_engine() -> LLMEngine:
     params = {
@@ -23,9 +25,11 @@ def initialize_engine() -> LLMEngine:
     logger.info("Engine warmup complete")
     return engine
 
+
 def cleanup_engine(engine: LLMEngine) -> None:
     engine.close()
     logger.info("Engine closed")
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -40,6 +44,7 @@ async def lifespan(app: FastAPI):
     finally:
         if engine:
             cleanup_engine(engine)
+
 
 model_app = FastAPI(lifespan=lifespan)
 

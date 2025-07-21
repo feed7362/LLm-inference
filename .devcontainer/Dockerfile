@@ -12,19 +12,27 @@ RUN apt update \
     && apt install -y --no-install-recommends python3-pip cmake g++ wget git ninja-build gcc build-essential \
     && apt autoremove -y && rm -rf /var/lib/apt/lists/*
 
-RUN pip3 install --no-cache-dir --upgrade pip cmake scikit-build setuptools
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
+ENV PATH="/opt/venv/bin:${PATH}" \
+    UV_COMPILE_BYTECODE=1 \
+    UV_LINK_MODE=copy \
+    UV_PROJECT_ENVIRONMENT="/opt/venv"
 
-RUN CMAKE_ARGS="-DLLAMA_CUDA=on -DCMAKE_CUDA_ARCHITECTURES=75\;86\;89" pip install llama-cpp-python
+COPY pyproject.toml .
+
+RUN uv venv /opt/venv
+
+RUN uv add cmake scikit-build setuptools \
+    && CMAKE_ARGS="-DLLAMA_CUDA=on -DCMAKE_CUDA_ARCHITECTURES=75;86;89" uv add llama-cpp-python
+
+RUN uv sync
 
 WORKDIR /whisper
 RUN git clone https://github.com/ggerganov/whisper.cpp.git . && \
     sed -i 's/set(BUILD_SHARED_LIBS_DEFAULT ON)/set(BUILD_SHARED_LIBS_DEFAULT OFF)/' CMakeLists.txt && \
     cmake -B build -DGGML_CUDA=1 -DCMAKE_CUDA_ARCHITECTURES=75\;86\;89 . && \
-    cmake --build build -j6 --config Release
+    cmake --build build -j7 --config Release
 # Copy the built whisper binary and avoiding the need for .so files
-
-RUN mkdir -p /llama-cpp/site-packages \
-    && cp -r /usr/local/lib/python3*/dist-packages/* /llama-cpp/site-packages/
 
 ############################################################
 # Runtime stage
@@ -32,9 +40,10 @@ RUN mkdir -p /llama-cpp/site-packages \
 FROM nvidia/cuda:12.8.0-runtime-ubuntu22.04
 
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
-ENV UV_COMPILE_BYTECODE=1
-ENV UV_LINK_MODE=copy
-ENV UV_PROJECT_ENVIRONMENT="/opt/venv"
+ENV PATH="/opt/venv/bin:${PATH}" \
+    UV_COMPILE_BYTECODE=1 \
+    UV_LINK_MODE=copy \
+    UV_PROJECT_ENVIRONMENT="/opt/venv"
 
 WORKDIR /app
 
@@ -44,17 +53,11 @@ RUN apt-get update && \
 
 COPY . .
 
-RUN uv sync --no-dev &&  \
-    uv venv /opt/venv
-
-ENV PATH="/opt/venv/bin:${PATH}"
-
-COPY --from=cuda_builder /llama-cpp/site-packages /opt/venv/lib/python3.10/site-packages/
+COPY --from=cuda_builder /opt/venv /opt/venv
 COPY --from=cuda_builder /whisper/build/bin /usr/local/bin/whisper
 ENV PATH="/usr/local/bin/whisper:${PATH}"
 
-# Ставим сам пакет
-RUN uv pip install .
+RUN uv sync --no-dev
 
 EXPOSE 2222
 

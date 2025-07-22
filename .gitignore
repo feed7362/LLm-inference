@@ -5,9 +5,9 @@
 .idea/
 .vscode/
 
-data/audio
-data/chroma
-data/logs
+data/audio/*
+data/chroma/*
+data/logs/*
 
 *.pyc
 *.pyo
@@ -157,7 +157,7 @@ celerybeat.pid
 *.sage.py
 
 # Environments
-.env
+*.env
 .envrc
 .venv
 env/

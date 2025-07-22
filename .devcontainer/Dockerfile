@@ -8,9 +8,12 @@ WORKDIR /app
 ENV CUDA_DOCKER_ARCH=all
 ENV GGML_CUDA=1
 
-RUN apt update \
-    && apt install -y --no-install-recommends python3-pip cmake g++ wget git ninja-build gcc build-essential \
-    && apt autoremove -y && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get upgrade -y \
+    && apt-get install -y git build-essential \
+    python3 python3-pip gcc wget \
+    ocl-icd-opencl-dev opencl-headers clinfo \
+    libclblast-dev libopenblas-dev \
+    && mkdir -p /etc/OpenCL/vendors && echo "libnvidia-opencl.so.1" > /etc/OpenCL/vendors/nvidia.icd
 
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 ENV PATH="/opt/venv/bin:${PATH}" \
@@ -23,7 +26,7 @@ COPY pyproject.toml .
 RUN uv venv /opt/venv
 
 RUN uv add cmake scikit-build setuptools \
-    && CMAKE_ARGS="-DLLAMA_CUDA=on -DCMAKE_CUDA_ARCHITECTURES=75;86;89" uv add llama-cpp-python
+    && CMAKE_ARGS="-DGGML_CUDA=1 -DCMAKE_CUDA_ARCHITECTURES=75;86;89" uv pip install llama-cpp-python --upgrade --force-reinstall --no-cache-dir --verbose
 
 RUN uv sync
 

@@ -28,7 +28,7 @@ RUN uv venv /opt/venv
 RUN uv add cmake scikit-build setuptools \
     && CMAKE_ARGS="-DGGML_CUDA=1 -DCMAKE_CUDA_ARCHITECTURES=75;86;89" uv pip install llama-cpp-python --upgrade --force-reinstall --no-cache-dir --verbose
 
-RUN uv sync
+RUN uv sync --no-dev
 
 WORKDIR /whisper
 RUN git clone https://github.com/ggerganov/whisper.cpp.git . && \
